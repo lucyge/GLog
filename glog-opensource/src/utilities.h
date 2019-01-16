@@ -174,6 +174,10 @@ int32 GetMainThreadPid();
 bool PidHasChanged();
 
 pid_t GetTID();
+#if defined(HAVE_FIBERS)
+void SetFKEY(pthread_key_t &key);
+uint64_t GetFID();
+#endif
 
 const std::string& MyUserName();
 

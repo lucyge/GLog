@@ -1074,7 +1074,11 @@ void LogFileObject::Write(bool force_flush,
                        << "Running on machine: "
                        << LogDestination::hostname() << '\n'
                        << "Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu "
+#if defined(HAVE_FIBERS)
+                       << "threadid fiberid file:line] msg" << '\n';
+#else
                        << "threadid file:line] msg" << '\n';
+#endif
     const string& file_header_string = file_header_stream.str();
 
     const int header_len = file_header_string.size();
@@ -1131,6 +1135,7 @@ void LogFileObject::Write(bool force_flush,
 }
 
 }  // namespace
+
 
 
 // Static log data space to avoid alloc failures in a LOG(FATAL)
@@ -1268,8 +1273,16 @@ void LogMessage::Init(const char* file,
              << setw(2) << data_->tm_time_.tm_sec   << "."
              << setw(6) << usecs
              << ' '
+#if defined(HAVE_FIBERS)
+             << setfill('0') << setw(5)
+             << static_cast<unsigned int>(GetTID())
+             << ' '
+             << setfill('0') << setw(20)
+             << static_cast<unsigned long>(GetFID()) 
+#else
              << setfill(' ') << setw(5)
              << static_cast<unsigned int>(GetTID()) << setfill('0')
+#endif
              << ' '
              << data_->basename_ << ':' << data_->line_ << "] ";
   }
@@ -1671,8 +1684,15 @@ string LogSink::ToString(LogSeverity severity, const char* file, int line,
          << setw(2) << tm_time->tm_min << ':'
          << setw(2) << tm_time->tm_sec << '.'
          << setw(6) << usecs
+#if defined(HAVE_FIBERS)
+         << ' '
+         << setfill('0') << setw(5) << GetTID()
+         << ' '
+         << setfill('0') << setw(20) << GetFID() 
+#else
          << ' '
          << setfill(' ') << setw(5) << GetTID() << setfill('0')
+#endif
          << ' '
          << file << ':' << line << "] ";
 
@@ -2152,5 +2172,11 @@ void ShutdownGoogleLogging() {
   delete logging_directories_list;
   logging_directories_list = NULL;
 }
+
+#ifdef HAVE_FIBERS
+void InitGoogleFiberKey(pthread_key_t &fiberKey) {
+  SetFKEY(fiberKey);
+}
+#endif
 
 _END_GOOGLE_NAMESPACE_

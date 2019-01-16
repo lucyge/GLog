@@ -58,6 +58,10 @@
 
 using std::string;
 
+#if defined(HAVE_FIBERS)
+#include <folly/fibers/FiberManager.h>
+#endif
+
 _START_GOOGLE_NAMESPACE_
 
 static const char* g_program_invocation_short_name = NULL;
@@ -281,6 +285,28 @@ pid_t GetTID() {
   return (pid_t)(uintptr_t)pthread_self();
 #endif
 }
+
+
+#if defined(HAVE_FIBERS)
+static std::map<pid_t, pthread_key_t> _fiberKeyMap;
+
+void SetFKEY(pthread_key_t &fiberKey) {
+  pid_t tid = GetTID();
+  _fiberKeyMap[tid] = fiberKey;
+}
+
+uint64_t GetFID() {
+  uint64_t fid = 0L;
+  pid_t tid = GetTID();
+  std::map<pid_t, pthread_key_t>::iterator it = _fiberKeyMap.find(tid);
+  if (it != _fiberKeyMap.end()) {
+    uint64_t *fidp = (uint64_t *)pthread_getspecific(it->second);
+    if (fidp != NULL)
+        fid =  *fidp;
+  }
+  return fid;
+}
+#endif
 
 const char* const_basename(const char* filepath) {
   const char* base = strrchr(filepath, '/');

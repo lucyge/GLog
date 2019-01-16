@@ -128,6 +128,9 @@ if test x"$acx_pthread_ok" = x"yes"; then
   AC_CHECK_LIB(pthread, pthread_self)
 fi
 
+FOLLY_CPPFLAGS="-DHAVE_FIBERS"
+CPPFLAGS="$CPPFLAGS $FOLLY_CPPFLAGS"
+
 # Check if there is google-gflags library installed.
 SAVE_CFLAGS="$CFLAGS"
 SAVE_LIBS="$LIBS"

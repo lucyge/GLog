@@ -20,6 +20,7 @@ set (CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 option (WITH_GFLAGS "Use gflags" ON)
 option (WITH_THREADS "Enable multithreading support" ON)
 option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON)
+option (WITH_FIBERS "Enable Fiber support" ON)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -348,6 +349,12 @@ if (WITH_THREADS AND Threads_FOUND)
 else (WITH_THREADS AND Threads_FOUND)
   set (NO_THREADS 1)
 endif (WITH_THREADS AND Threads_FOUND)
+
+if (WITH_FIBERS)
+  set (ac_cv_have_fibers 1)
+else (WITH_FIBERS)
+  set (ac_cv_have_fibers 0)
+endif (WITH_FIBERS)
 
 set (TEST_SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}\")
 

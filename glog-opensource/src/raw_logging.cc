@@ -126,12 +126,22 @@ void RawLog__(LogSeverity severity, const char* file, int line,
   int size = sizeof(buffer);
 
   // NOTE: this format should match the specification in base/logging.h
+#if defined(HAVE_FIBERS)
+  DoRawLog(&buf, &size, "%c%02d%02d %02d:%02d:%02d.%06d %5u %20u %s:%d] RAW: ",
+           LogSeverityNames[severity][0],
+           1 + t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec,
+           last_usecs_for_raw_log,
+           static_cast<unsigned int>(GetTID()),
+           static_cast<unsigned long>(GetFID()),
+           const_basename(const_cast<char *>(file)), line);
+#else
   DoRawLog(&buf, &size, "%c%02d%02d %02d:%02d:%02d.%06d %5u %s:%d] RAW: ",
            LogSeverityNames[severity][0],
            1 + t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec,
            last_usecs_for_raw_log,
            static_cast<unsigned int>(GetTID()),
            const_basename(const_cast<char *>(file)), line);
+#endif
 
   // Record the position and size of the buffer after the prefix
   const char* msg_start = buf;
